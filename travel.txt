@@ -1,0 +1,147 @@
+SELECT SESSION_USER, CURRENT_SCHEMA FROM DUMMY;
+SELECT SYSTEM_ID, DATABASE_NAME, HOST, VERSION, USAGE FROM M_DATABASE;
+
+---
+
+CREATE USER devuser PASSWORD <password> NO FORCE_FIRST_PASSWORD_CHANGE SET USERGROUP DEFAULT;
+GRANT CATALOG READ TO devuser WITH ADMIN OPTION;
+GRANT CREATE SCHEMA TO devuser WITH ADMIN OPTION;
+GRANT HANA_SYSRDL#CG_ADMIN_ROLE TO devuser;
+
+CREATE USER enduser PASSWORD <password> NO FORCE_FIRST_PASSWORD_CHANGE SET USERGROUP DEFAULT;
+
+---
+
+CALL SYSRDL#CG.REMOTE_EXECUTE ('
+BEGIN
+
+    CREATE TABLE city ( 
+        zip VARCHAR(5) PRIMARY KEY,
+        name VARCHAR(30) NOT NULL,
+        state VARCHAR(2) NOT NULL
+    );
+
+    CREATE TABLE hotel (
+        hno INTEGER PRIMARY KEY,
+        name VARCHAR(50) NOT NULL,
+        zip VARCHAR(5),
+        address VARCHAR(40) NOT NULL
+    );
+
+    INSERT INTO city VALUES (''60601'', ''Chicago'', ''IL'');
+    INSERT INTO city VALUES (''75243'', ''Dallas'', ''TX'');
+    INSERT INTO city VALUES (''32018'', ''Daytona Beach'', ''FL'');
+    INSERT INTO city VALUES (''48226'', ''Detroit'', ''MI'');
+    INSERT INTO city VALUES (''90029'', ''Hollywood'', ''CA'');
+    INSERT INTO city VALUES (''90804'', ''Long Beach'', ''CA'');
+    INSERT INTO city VALUES (''11788'', ''Long Island'', ''NY'');
+    INSERT INTO city VALUES (''90018'', ''Los Angeles'', ''CA'');
+    INSERT INTO city VALUES (''70112'', ''New Orleans'', ''LA'');
+
+    INSERT INTO hotel VALUES (10, ''Long Island'', ''11788'', ''1499 Grove Street'');
+    INSERT INTO hotel VALUES (30, ''Lake Michigan'', ''60601'', ''354 Oak Terrace'');
+    INSERT INTO hotel VALUES (100, ''Beachside'', ''32018'', ''1980 34th St.'');
+    INSERT INTO hotel VALUES (110, ''Atlantic'', ''33441'', ''111 78th St.'');
+    INSERT INTO hotel VALUES (120, ''Calypso'', ''90804'', ''35 Broadway'');
+    INSERT INTO hotel VALUES (130, ''Evening Star'', ''90029'', ''13 Beechwood Place'');
+    INSERT INTO hotel VALUES (140, ''Steamboat Louis Armstrong'', ''70112'', ''788 Main St.'');
+
+END');
+
+---
+
+CREATE SCHEMA travel;
+
+CREATE COLUMN TABLE travel.room (
+	hno NUMERIC(4),
+	type CHAR(6),
+	free NUMERIC(3),
+	price NUMERIC(6, 2),
+	PRIMARY KEY (hno, type)
+);
+
+INSERT INTO travel.room VALUES (10, 'single', 20, 135.00);
+INSERT INTO travel.room VALUES (10, 'double', 45, 200.00);
+INSERT INTO travel.room VALUES (30, 'single', 12, 45.00);
+INSERT INTO travel.room VALUES (30, 'double', 15, 80.00);
+INSERT INTO travel.room VALUES (100, 'single', 11, 60.00);
+INSERT INTO travel.room VALUES (100, 'double', 24, 100.00);
+INSERT INTO travel.room VALUES (110, 'single', 2, 70.00);
+INSERT INTO travel.room VALUES (110, 'double', 10, 130.00);
+INSERT INTO travel.room VALUES (120, 'single', 34, 80.00);
+INSERT INTO travel.room VALUES (120, 'double', 78, 140.00);
+INSERT INTO travel.room VALUES (120, 'suite', 55, 350.00);
+INSERT INTO travel.room VALUES (130, 'single', 89, 100.00);
+INSERT INTO travel.room VALUES (130, 'double', 300, 270.00);
+INSERT INTO travel.room VALUES (130, 'suite', 100, 700.00);
+INSERT INTO travel.room VALUES (140, 'single', 10, 99.00);
+INSERT INTO travel.room VALUES (140, 'double', 9, 149.00);
+INSERT INTO travel.room VALUES (140, 'suite', 78, 499.00);
+
+---
+
+CREATE VIEW travel.budgetrooms AS 
+    SELECT c."state", c."name" AS city, h."name" AS hotel, r.type, r.free, r.price
+      FROM travel.room r
+      INNER JOIN travel."v_hotel" h ON h."hno" = r.hno
+      INNER JOIN travel."v_city" c ON c."zip" = h."zip"
+      WHERE r.price <= 100
+    ;
+
+SELECT * FROM travel.budgetrooms;
+
+GRANT SELECT ON SCHEMA travel TO enduser;
+
+---
+
+npm install async-waterfall
+npm config set @sap:registry https://npm.sap.com
+npm install @sap/hana-client
+node query.js
+
+---
+
+pip install hdbcli
+python query.py
+
+---
+
+java -jar ngdbc.jar -u <user>,<password> -n <endpoint> -o encrypt=true -c "SELECT * FROM travel.budgetrooms";
+
+javac query.java
+java -classpath "<path>\ngdbc.jar;." query
+
+---
+
+hdbsql -u <user> -p <password> -n <endpoint> -e "SELECT * FROM travel.budgetrooms"
+
+---
+
+COLUMN TABLE "travel.db::room" 
+    (
+        "hno" INTEGER, 
+        "type" VARCHAR(10),
+        "free" INTEGER, 
+        "price" DOUBLE, 
+        PRIMARY KEY ("hno", "type") 
+    )
+
+---
+
+INSERT INTO "travel.db::room" VALUES (10, 'single', 20, 135.00);
+INSERT INTO "travel.db::room" VALUES (10, 'double', 45, 200.00);
+INSERT INTO "travel.db::room" VALUES (30, 'single', 12, 45.00);
+INSERT INTO "travel.db::room" VALUES (30, 'double', 15, 80.00);
+INSERT INTO "travel.db::room" VALUES (100, 'single', 11, 60.00);
+INSERT INTO "travel.db::room" VALUES (100, 'double', 24, 100.00);
+INSERT INTO "travel.db::room" VALUES (110, 'single', 2, 70.00);
+INSERT INTO "travel.db::room" VALUES (110, 'double', 10, 130.00);
+INSERT INTO "travel.db::room" VALUES (120, 'single', 34, 80.00);
+INSERT INTO "travel.db::room" VALUES (120, 'double', 78, 140.00);
+INSERT INTO "travel.db::room" VALUES (120, 'suite', 55, 350.00);
+INSERT INTO "travel.db::room" VALUES (130, 'single', 89, 100.00);
+INSERT INTO "travel.db::room" VALUES (130, 'double', 300, 270.00);
+INSERT INTO "travel.db::room" VALUES (130, 'suite', 100, 700.00);
+INSERT INTO "travel.db::room" VALUES (140, 'single', 10, 99.00);
+INSERT INTO "travel.db::room" VALUES (140, 'double', 9, 149.00);
+INSERT INTO "travel.db::room" VALUES (140, 'suite', 78, 499.00);
