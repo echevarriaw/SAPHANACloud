@@ -252,24 +252,24 @@ npm install -g generator-saphanaacademy-haa
 
 ---
 
-select * from PSES where purpose = 'JWT';
-select * from CERTIFICATES;
-select * from PSE_CERTIFICATES;
-select * from JWT_PROVIDERS;
+SELECT * FROM PSES WHERE PURPOSE = 'JWT';
+SELECT * FROM CERTIFICATES;
+SELECT * FROM PSE_CERTIFICATES;
+SELECT * FROM JWT_PROVIDERS;
 
-create certificate from '<certificate>';
-call system.create_jwt_provider('JWTPROVIDER1', '<issuer>', 'user_name', true);
+CREATE certificate FROM '<certificate>';
+CALL SYSTEM.CREATE_JWT_PROVIDER('JWTPROVIDER1', '<issuer>', 'user_name', true);
 
-create pse PSE1;
-alter pse PSE1 add certificate <certificate_id>;
-call system.set_pse_purpose('PSE1', 'JWT', ARRAY('JWTPROVIDER1'));
+CREATE pse PSE1;
+ALTER pse PSE1 ADD certificate <certificate_id>;
+CALL SYSTEM.SET_PSE_PURPOSE('PSE1', 'JWT', ARRAY('JWTPROVIDER1'));
 
 ---
 
-create user MYUSER password <password> no FORCE_FIRST_PASSWORD_CHANGE set USERGROUP DEFAULT;
-grant execute on SYS.EXECUTE_MDS_DEV to MYUSER;
-alter user MYUSER ENABLE JWT;
-alter user MYUSER add identity '<email>' for JWT provider JWTPROVIDER1;
-grant "<hdi-schema>::external_privileges_role" to MYUSER;
---grant "<hdi-schema>::access_role" to MYUSER;
-grant "<hdi-schema>"."travel.db::analytics" to MYUSER;
+CREATE USER myuser PASWSORD <password> NO FORCE_FIRST_PASSWORD_CHANGE SET USERGROUP DEFAULT;
+GRANT EXECUTE ON SYS.EXECUTE_MDS_DEV TO myuser;
+ALTER USER myuser ENABLE JWT;
+ALTER USER myuser ADD IDENTITY '<email>' FOR JWT PROVIDER JWTPROVIDER1;
+GRANT "<hdi-schema>::external_privileges_role" TO myuser;
+--GRANT "<hdi-schema>::access_role" TO myuser;
+GRANT "<hdi-schema>"."travel.db::analytics" TO myuser;
