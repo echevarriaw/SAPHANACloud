@@ -273,3 +273,68 @@ ALTER USER myuser ADD IDENTITY '<email>' FOR JWT PROVIDER JWTPROVIDER1;
 GRANT "<hdi-schema>::external_privileges_role" TO myuser;
 --GRANT "<hdi-schema>::access_role" TO myuser;
 GRANT "<hdi-schema>"."travel.db::analytics" TO myuser;
+
+---
+
+CREATE COLUMN TABLE travel.customer (
+  id INTEGER,
+  customer VARCHAR(20),
+  cc VARCHAR(20),
+  ssn VARCHAR(20),
+  PRIMARY KEY (id)
+  )
+ WITH MASK (cc USING '####-####-####-####')
+ ;
+
+INSERT INTO travel.customer VALUES (1, 'Jamie',  '1234-5678-9012-3456', '123-00-4567');
+INSERT INTO travel.customer VALUES (2, 'Julie',  '2222-2222-2222-2222', '222-00-2222');
+INSERT INTO travel.customer VALUES (3, 'Bob',    '3333-3333-3333-3333', '333-00-3333');
+INSERT INTO travel.customer VALUES (4, 'Denys',  '4444-4444-4444-4444', '444-00-4444');
+INSERT INTO travel.customer VALUES (5, 'Philip', '5555-5555-5555-5555', '555-00-5555');
+INSERT INTO travel.customer VALUES (6, 'Joe',    '6666-6666-6666-6666', '666-00-6666');
+
+SELECT * FROM travel.customer;
+
+ALTER TABLE travel.customer
+ ADD MASK (ssn USING '###-##-##' || RIGHT(ssn,2))
+ ;
+
+CREATE FUNCTION travel.maskcc (input VARCHAR(20)) RETURNS output VARCHAR(20) LANGUAGE SQLSCRIPT AS
+BEGIN
+  output = LEFT(:input,2) || '##-####-####-#' || RIGHT(:input,3);
+END;
+
+ALTER TABLE travel.customer
+ ALTER MASK (cc USING travel.maskcc(cc))
+ ;
+
+SELECT *
+  FROM EFFECTIVE_MASK_EXPRESSIONS
+  WHERE     ROOT_SCHEMA_NAME = 'TRAVEL' 
+        AND ROOT_OBJECT_NAME = 'CUSTOMER'
+        AND ROOT_COLUMN_NAME IN ('CC','SSN')
+        AND        USER_NAME = 'ENDUSER'
+ ;
+
+GRANT UNMASKED ON SCHEMA travel TO enduser;
+
+---
+
+COLUMN TABLE "travel.db::customer" (
+  "id" INTEGER,
+  "customer" VARCHAR(20),
+  "cc" VARCHAR(20),
+  "ssn" VARCHAR(20),
+  "nights" INTEGER,
+  PRIMARY KEY ("id")
+  )
+
+INSERT INTO "travel.db::customer" VALUES (1, 'Jamie',  '1234-5678-9012-3456', '123-00-4567', 2);
+INSERT INTO "travel.db::customer" VALUES (2, 'Julie',  '2222-2222-2222-2222', '222-00-2222', 3);
+INSERT INTO "travel.db::customer" VALUES (3, 'Bob',    '3333-3333-3333-3333', '333-00-3333', 8);
+INSERT INTO "travel.db::customer" VALUES (4, 'Denys',  '4444-4444-4444-4444', '444-00-4444', 4);
+INSERT INTO "travel.db::customer" VALUES (5, 'Philip', '5555-5555-5555-5555', '555-00-5555', 1);
+INSERT INTO "travel.db::customer" VALUES (6, 'Joe',    '6666-6666-6666-6666', '666-00-6666', 7);
+
+CONCAT('####-####-####-#',RIGHT("cc",3))
+CONCAT('###-##-##',RIGHT("ssn",2))

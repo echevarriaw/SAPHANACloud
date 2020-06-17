@@ -1,0 +1,142 @@
+CREATE SCHEMA ANON;
+SET SCHEMA ANON;
+
+CREATE COLUMN TABLE EMPLOYEES (
+  ID INTEGER NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  NAME NVARCHAR(50),
+  SITE NVARCHAR(20),
+  GENDER NVARCHAR(10),
+  AGE NVARCHAR(10),
+  SALARY DOUBLE
+  );
+
+INSERT INTO EMPLOYEES VALUES ('Henry Brubaker','Madrid','Male','29',91000);
+INSERT INTO EMPLOYEES VALUES ('Jaylene Jennings','Paris','Female','19',67000);
+INSERT INTO EMPLOYEES VALUES ('Dean Tavalouris','Boston','Male','20',76000);
+INSERT INTO EMPLOYEES VALUES ('Lydia Wong','Dallas','Female','18',81000);
+INSERT INTO EMPLOYEES VALUES ('Harvey Denton','Madrid','Male','19',45000);
+INSERT INTO EMPLOYEES VALUES ('Pamela Doove','Nantes','Female','21',78000);
+INSERT INTO EMPLOYEES VALUES ('Luciana Trujillo','Barcelona','Female','24',92000);
+INSERT INTO EMPLOYEES VALUES ('Demarcus Collins','Bordeaux','Male','18',67000);
+INSERT INTO EMPLOYEES VALUES ('Edward Tattsyrup','Barcelona','Male','18',78000);
+INSERT INTO EMPLOYEES VALUES ('Benjamin Denton','Paris','Male','19',98000);
+INSERT INTO EMPLOYEES VALUES ('Joaquin Barry','Madrid','Male','20',34000);
+INSERT INTO EMPLOYEES VALUES ('Emily Crane','Bordeaux','Female','21',92000);
+INSERT INTO EMPLOYEES VALUES ('Zack Winters','Madrid','Male','20',87000);
+INSERT INTO EMPLOYEES VALUES ('Dave Parkes','Madrid','Male','22',65000);
+INSERT INTO EMPLOYEES VALUES ('Aryan Lucas','Paris','Male','19',89000);
+INSERT INTO EMPLOYEES VALUES ('Pauline Campbell-Jones','Bordeaux','Female','19',91000);
+INSERT INTO EMPLOYEES VALUES ('Les McQueen','Barcelona','Male','18',72000);
+INSERT INTO EMPLOYEES VALUES ('Sarai Meza','Paris','Female','21',67000);
+INSERT INTO EMPLOYEES VALUES ('Geoff Tipps','Boston','Male','20',38000);
+INSERT INTO EMPLOYEES VALUES ('Little Don','Barcelona','Male','24',28000);
+INSERT INTO EMPLOYEES VALUES ('Marely Strong','Dallas','Male','23',53000);
+INSERT INTO EMPLOYEES VALUES ('Papa Reilly','Boston','Male','28',98000);
+INSERT INTO EMPLOYEES VALUES ('Stella Hull','Nantes','Female','19',23000);
+INSERT INTO EMPLOYEES VALUES ('Hilary Briss','Bordeaux','Male','20',37000);
+INSERT INTO EMPLOYEES VALUES ('Ross Gaines','Nantes','Male','18',65000);
+INSERT INTO EMPLOYEES VALUES ('Chloe Denton','Paris','Female','20',47000);
+INSERT INTO EMPLOYEES VALUES ('Jed Tinsel','Nantes','Male','21',83000);
+INSERT INTO EMPLOYEES VALUES ('Stephen Malley','Dallas','Male','24',37000);
+INSERT INTO EMPLOYEES VALUES ('Nikki Hollis','Vancouver','Female','23',64000);
+INSERT INTO EMPLOYEES VALUES ('Gordon Mikefield','Paris','Male','22',68000);
+INSERT INTO EMPLOYEES VALUES ('Tom Booker','Barcelona','Male','24',65000);
+INSERT INTO EMPLOYEES VALUES ('Samuel Chignell','Nantes','Male','23',81000);
+INSERT INTO EMPLOYEES VALUES ('Tom Logan','Bordeaux','Male','20',83000);
+INSERT INTO EMPLOYEES VALUES ('Ulises Villarreal','Paris','Female','19',54000);
+INSERT INTO EMPLOYEES VALUES ('Mike King','Nantes','Male','18',56000);
+INSERT INTO EMPLOYEES VALUES ('Ira Carlton','Vancouver','Female','23',54000);
+INSERT INTO EMPLOYEES VALUES ('Francis Joyce','Nantes','Female','19',76000);
+INSERT INTO EMPLOYEES VALUES ('Radclyffe Denton','Paris','Female','21',92000);
+INSERT INTO EMPLOYEES VALUES ('Mickey Michaels','Nantes','Male','21',12000);
+INSERT INTO EMPLOYEES VALUES ('Judee Levinson','Barcelona','Female','24',87000);
+INSERT INTO EMPLOYEES VALUES ('Madrid Hammond','Paris','Male','22',87000);
+INSERT INTO EMPLOYEES VALUES ('Christopher Frost','Vancouver','Male','23',75000);
+INSERT INTO EMPLOYEES VALUES ('Val Denton','Bordeaux','Female','19',91000);
+INSERT INTO EMPLOYEES VALUES ('Terry Lollard','Bordeaux','Male','27',62000);
+INSERT INTO EMPLOYEES VALUES ('Reenie Calver','Toronto','Female','18',65000);
+INSERT INTO EMPLOYEES VALUES ('Eve Lucero','Bordeaux','Female','21',73000);
+INSERT INTO EMPLOYEES VALUES ('Kathleen Estrada','Toronto','Female','23',84000);
+INSERT INTO EMPLOYEES VALUES ('Julian Cook','Madrid','Male','22',36000);
+INSERT INTO EMPLOYEES VALUES ('Tulip Tattsyrup','Paris','Female','20',43000);
+INSERT INTO EMPLOYEES VALUES ('Brian Morgan','Nantes','Male','23',52000);
+
+CREATE COLUMN TABLE HIER_GEO (
+  CHILD NVARCHAR(20),
+  PARENT NVARCHAR(20)
+  );
+
+INSERT INTO HIER_GEO VALUES ('Europe', NULL);
+INSERT INTO HIER_GEO VALUES ('North America', NULL);
+INSERT INTO HIER_GEO VALUES ('Spain', 'Europe');
+INSERT INTO HIER_GEO VALUES ('France', 'Europe');
+INSERT INTO HIER_GEO VALUES ('USA', 'North America');
+INSERT INTO HIER_GEO VALUES ('Canada', 'North America');
+INSERT INTO HIER_GEO VALUES ('Madrid', 'Spain');
+INSERT INTO HIER_GEO VALUES ('Barcelona', 'Spain');
+INSERT INTO HIER_GEO VALUES ('Bordeaux', 'France');
+INSERT INTO HIER_GEO VALUES ('Nantes', 'France');
+INSERT INTO HIER_GEO VALUES ('Paris', 'France');
+INSERT INTO HIER_GEO VALUES ('Boston', 'USA');
+INSERT INTO HIER_GEO VALUES ('Dallas', 'USA');
+INSERT INTO HIER_GEO VALUES ('Toronto', 'Canada');
+INSERT INTO HIER_GEO VALUES ('Vancouver', 'Canada');
+
+CREATE VIEW V_HIER_GEO AS 
+  SELECT * 
+    FROM HIERARCHY (
+      SOURCE ( SELECT CHILD AS NODE_ID, PARENT AS PARENT_ID FROM HIER_GEO )
+      SIBLING ORDER BY PARENT_ID, NODE_ID
+      );
+
+CREATE OR REPLACE FUNCTION GROUP_AGE (age NVARCHAR(10), level INTEGER)
+RETURNS outValue NVARCHAR(50) AS
+BEGIN
+  DECLARE defineValue INTEGER DEFAULT 5;
+  DECLARE interval INTEGER;
+  DECLARE rangeFrom INTEGER;
+  IF (level > 0) THEN 
+    interval := defineValue * power(2, level - 1);
+    rangeFrom = FLOOR(age / interval) * interval;
+    outValue := '[' || rangeFrom || '-' || rangeFrom + interval - 1 || ']';
+  ELSE
+    outValue := age;
+  END IF;
+END;
+
+DROP VIEW EMPLOYEES_ANON;
+
+CREATE VIEW EMPLOYEES_ANON AS
+  SELECT ID, SITE, GENDER, AGE, SALARY
+  FROM EMPLOYEES
+  WITH ANONYMIZATION (
+    ALGORITHM 'K-ANONYMITY'
+    PARAMETERS '{"k": 2}'
+    COLUMN ID PARAMETERS '{"is_sequence": true}'
+    COLUMN SITE PARAMETERS '{"is_quasi_identifier":true, "hierarchy":{"schema":"ANON", "view":"V_HIER_GEO"}}'
+    COLUMN GENDER PARAMETERS '{"is_quasi_identifier":true, "hierarchy":{"embedded": [["Female"], ["Male"]]}}'
+    COLUMN AGE PARAMETERS '{"is_quasi_identifier":true, "hierarchy":{"schema":"ANON", "function":"GROUP_AGE", "levels":3}}'
+  );
+
+SELECT * FROM M_ANONYMIZATION_VIEWS;
+
+REFRESH VIEW EMPLOYEES_ANON ANONYMIZATION;
+
+SELECT * FROM EMPLOYEES_ANON ORDER BY SITE, GENDER, AGE;
+
+CALL GET_ANONYMIZATION_VIEW_STATISTICS('get_names', NULL, 'ANON', 'EMPLOYEES_ANON');
+CALL GET_ANONYMIZATION_VIEW_STATISTICS('get_values', NULL, 'ANON', 'EMPLOYEES_ANON');
+
+CREATE VIEW EMPLOYEES_ANON AS
+  SELECT ID, SITE, GENDER, AGE, SALARY
+  FROM EMPLOYEES
+  WITH ANONYMIZATION (
+    ALGORITHM 'DIFFERENTIAL_PRIVACY'
+    PARAMETERS ''
+    COLUMN ID PARAMETERS '{"is_sequence": true}'
+    COLUMN SALARY PARAMETERS '{"is_sensitive": true, "epsilon": 0.5, "sensitivity": 10000}'
+  );
+
+SELECT E.ID, E.SALARY, A.SALARY FROM EMPLOYEES E INNER JOIN EMPLOYEES_ANON A ON (A.ID=E.ID);
+SELECT AVG(SALARY) FROM EMPLOYEES UNION SELECT AVG(SALARY) FROM EMPLOYEES_ANON;
+SELECT 'RAW' AS TYPE, GENDER, AVG(SALARY) AS SALARY FROM EMPLOYEES GROUP BY GENDER UNION SELECT 'ANON' AS TYPE, GENDER, AVG(SALARY) AS SALARY_ANON FROM EMPLOYEES_ANON GROUP BY GENDER
