@@ -6,7 +6,8 @@ var hana = require('@sap/hana-client');
 
 var connOptions = {
     serverNode: '<endpoint>',
-	encrypt: 'true',
+    encrypt: 'true',
+    sslValidateCertificate: 'false',
     uid: '<user>',
     pwd: '<password>'
 };

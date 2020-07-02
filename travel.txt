@@ -109,11 +109,16 @@ python query.py
 java -jar ngdbc.jar -u <user>,<password> -n <endpoint> -o encrypt=true -c "SELECT * FROM travel.budgetrooms";
 
 javac query.java
+
+Windows:
 java -classpath "<path>\ngdbc.jar;." query
+
+Linux/MacOS:
+java -classpath "<path>\ngdbc.jar:." query
 
 ---
 
-hdbsql -u <user> -p <password> -n <endpoint> -e "SELECT * FROM travel.budgetrooms"
+hdbsql -u <user> -p <password> -n <endpoint> -ssltrustcert -e "SELECT * FROM travel.budgetrooms"
 
 ---
 

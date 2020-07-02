@@ -3,7 +3,7 @@ public class query {
     public static void main(String[] argv) {
         Connection connection = null;
         try {
-            connection = DriverManager.getConnection("jdbc:sap://<endpoint>/?encrypt=true&validateCertificate=true", "<user>", "<password>");
+            connection = DriverManager.getConnection("jdbc:sap://<endpoint>/?encrypt=true", "<user>", "<password>");
         }
         catch (SQLException e) {
             System.err.println("Connection to SAP HANA Cloud Failed:");

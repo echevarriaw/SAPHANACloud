@@ -2,7 +2,8 @@ from hdbcli import dbapi
 conn = dbapi.connect(
     address="<host>",
     port=<port>,
-	encrypt="true",
+    encrypt="true",
+    sslValidateCertificate="false",
     user="<user>",
     password="<password>"
 )
