@@ -46,7 +46,7 @@ CREATE SCHEMA MYDATA;
 -- virtual table
 CREATE VIRTUAL TABLE MYDATA."v_SALES" AT "hana1"."<null>"."MYDATA"."SALES";
 
--- linked database 
+-- linked database (generated objects are stored in _SYS_LDB schema)
 SELECT * FROM "hana1"."MYDATA"."SALES";
 
 -- synonym
@@ -54,7 +54,6 @@ CREATE SYNONYM MYDATA."s_SALES" FOR "hana1"."MYDATA"."SALES";
 
 -- refresh linked database
 ALTER REMOTE SOURCE "hana1" REFRESH LINKED OBJECTS;
-*** linked objects are stored in _SYS_LDB schema
 
 -- delete linked database
 ALTER REMOTE SOURCE "hana1" DROP LINKED OBJECTS CASCADE;
