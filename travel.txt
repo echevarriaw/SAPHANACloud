@@ -343,3 +343,25 @@ INSERT INTO "travel.db::customer" VALUES (6, 'Joe',    '6666-6666-6666-6666', '6
 
 CONCAT('####-####-####-#',RIGHT("cc",3))
 CONCAT('###-##-##',RIGHT("ssn",2))
+
+---
+
+SELECT * FROM CERTIFICATES;
+SELECT * FROM SAML_PROVIDERS;
+SELECT * FROM PSES WHERE PURPOSE = 'SAML';
+SELECT * FROM PSE_CERTIFICATES;
+
+CREATE certificate FROM '<certificate>';
+
+CALL SYSTEM.CREATE_SAML_PROVIDER('SAMLPROVIDER1', '<subject_distinguished_name>', '<issuer_distinguished_name>', '<entity_id>', false, true);
+
+CREATE pse PSE1;
+ALTER pse PSE1 ADD certificate <certificate_id>;
+CALL SYSTEM.SET_PSE_PURPOSE('PSE1', 'SAML', ARRAY('SAMLPROVIDER1'));
+
+---
+
+CREATE USER myuser;
+ALTER USER myuser ENABLE SAML;
+ALTER USER myuser ADD IDENTITY '<email>' FOR SAML PROVIDER SAMLPROVIDER1;
+GRANT "<hdi-schema>"."travel.db::analytics" TO myuser;
