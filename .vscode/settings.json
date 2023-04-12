@@ -1,0 +1,21 @@
+{
+    "sqltools.useNodeRuntime": true,
+    "SAP HANA Database Explorer.displaySapWebAnalyticsStartupNotification": false,
+    "sqltools.connections": [
+        {
+            "connectionTimeout": 30,
+            "hanaOptions": {
+                "encrypt": true,
+                "sslValidateCertificate": false
+            },
+            "previewLimit": 50,
+            "driver": "SAPHana",
+            "name": "billec-hana(dbadmin)",
+            "server": "78517bd7-ba99-4c3b-9085-ef4c0bac8377.hana.trial-us10.hanacloud.ondemand.com",
+            "port": 443,
+            "database": "TRAVEL",
+            "username": "DBADMIN",
+            "password": "WaK8rat1"
+        }
+    ]
+}
